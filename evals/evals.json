@@ -1,0 +1,44 @@
+{
+  "skill_name": "source-skill-pipeline",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我在 /Users/asher/work/example-app 有一个本地项目。请把它分析成项目专属 skill：先给我 3 个推荐技能名，我选 example-app，然后尝试用 skill-seekers 生成 draft，再用 skill-create 优化，最后告诉我 final skill 和 .skill 包在哪里。",
+      "expected_output": "The run proposes three names, accepts the user's selected/custom name, discovers available tools, analyzes the specified repository, produces a draft skill, optimizes it, validates it, packages it, and reports any fallback used.",
+      "files": [],
+      "expectations": [
+        "Checks whether skill-seekers and skill-create are installed before using them",
+        "Keeps analyzer output and optimizer output in separate directories or clearly named stages",
+        "Validates SKILL.md frontmatter before packaging",
+        "Reports final skill directory and packaged .skill path",
+        "Offers three recommended base names before finalizing",
+        "Names the final generated skill example-app-skill"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "我有一个 OpenAPI 文件 ./specs/payments.yaml，想把它做成技能。skill-seekers 可能没装，请先给 3 个命名建议，也允许我自定义名称，然后继续生成 skill。",
+      "expected_output": "The run supports a non-code source type, proposes names, falls back to source-appropriate OpenAPI inspection when skill-seekers is unavailable, drafts a source-specific skill from evidence, marks uncertain details as uncertain or omits them, and creates eval prompts.",
+      "files": [],
+      "expectations": [
+        "Uses source-appropriate inspection when skill-seekers is unavailable",
+        "Cites or references real OpenAPI files, endpoints, schemas, or sections",
+        "Avoids inventing commands or API details that are not supported by source evidence",
+        "Creates evals/evals.json for the generated source skill",
+        "Appends -skill to the selected or custom name in the directory and SKILL.md frontmatter"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "我已经有一个 skill-seekers 生成的 draft skill，在 ./generated/foo-skill。请用 skill-create 或 skill-creator 的流程把它变成稳定版本，重点优化触发 description 和测试用例。",
+      "expected_output": "The run treats the existing draft as input, snapshots it, improves the description and instructions, adds realistic eval prompts, validates the result, and explains how to review or rerun evaluations.",
+      "files": [],
+      "expectations": [
+        "Preserves the existing -skill suffix and does not rename foo-skill to foo-skill-skill",
+        "Snapshots or otherwise protects the original draft before editing",
+        "Improves description for trigger specificity",
+        "Adds realistic should-work eval prompts covering multiple source workflows"
+      ]
+    }
+  ]
+}
