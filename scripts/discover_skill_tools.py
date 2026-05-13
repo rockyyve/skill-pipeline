@@ -77,6 +77,7 @@ def main() -> None:
         "candidate_paths": {},
         "recommended_path": "",
         "missing_optional_tools": [],
+        "install_suggestion": "",
     }
 
     for root in SEARCH_ROOTS:
@@ -93,9 +94,11 @@ def main() -> None:
     elif has_seekers:
         result["recommended_path"] = "hybrid pipeline: skill-seekers draft, then skill-creator/manual optimization"
     elif has_create:
-        result["recommended_path"] = "hybrid pipeline: manual repository draft, then skill-create optimization"
+        result["recommended_path"] = "install-first pipeline: install skill-seekers, then draft; fallback to manual source draft, then skill-create optimization"
+        result["install_suggestion"] = "skill-seekers missing. Ask user before running: python3 -m pip install --user skill-seekers"
     else:
-        result["recommended_path"] = "fallback pipeline: manual repository inspection, skill-creator-style optimization, validation, and packaging"
+        result["recommended_path"] = "install-first pipeline: install skill-seekers, then draft; fallback to manual source inspection, skill-creator-style optimization, validation, and packaging"
+        result["install_suggestion"] = "skill-seekers missing. Ask user before running: python3 -m pip install --user skill-seekers"
 
     print(json.dumps(result, indent=2, ensure_ascii=False))
 

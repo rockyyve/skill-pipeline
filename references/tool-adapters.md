@@ -4,7 +4,7 @@ Use this reference when adapting the pipeline to the exact local tools installed
 
 ## Dependency Policy
 
-`skill-seekers` and `skill-create` are accelerators. A source-specific skill can still be produced without them.
+`skill-seekers` is the preferred analyzer. If it is missing, try the installation flow first. `skill-create` is an optimizer accelerator; a source-specific skill can still be produced without it.
 
 Use this decision table:
 
@@ -12,10 +12,23 @@ Use this decision table:
 | --- | --- | --- |
 | `skill-seekers` + `skill-create` | Run `skill-seekers` | Run `skill-create` |
 | `skill-seekers` only | Run `skill-seekers` | Use skill-creator/manual optimization |
-| `skill-create` only | Manual source inspection | Run `skill-create` |
-| Neither | Manual source inspection | Manual skill-creator-style optimization |
+| `skill-create` only | Install `skill-seekers`; fallback to manual source inspection if install fails | Run `skill-create` |
+| Neither | Install `skill-seekers`; fallback to manual source inspection if install fails | Manual skill-creator-style optimization |
 
-If a missing dependency has clear local installation instructions, ask the user before installing. If installation requires network access, credentials, or unclear package names, continue with fallback instead of guessing.
+## skill-seekers Installation Flow
+
+When `skill-seekers` is missing, attempt installation before source analysis:
+
+1. Check available Python tooling with `python3 --version`, `python3 -m pip --version`, and `command -v uv`.
+2. Prefer `python3 -m pip install --user skill-seekers` for the default install.
+3. Use `uv tool install skill-seekers` if `uv` is available and the user prefers isolated CLI tools.
+4. Use extras when the source requires them, for example `skill-seekers[pptx]`, `skill-seekers[video]`, `skill-seekers[notion]`, `skill-seekers[confluence]`, `skill-seekers[rss]`, `skill-seekers[chat]`, or `skill-seekers[all]`.
+5. Ask before installing because the command may need network access and modifies the user environment.
+6. Verify with `skill-seekers --version` and `skill-seekers --help`.
+
+If installation requires credentials, fails due to environment restrictions, or the user declines, continue with fallback instead of blocking.
+
+If `skill-create` is missing, do not stop. Use skill-creator/manual optimization unless the user explicitly wants to install or configure a separate optimizer.
 
 The final report should say which path was used so the user understands the confidence level and remaining setup gap.
 

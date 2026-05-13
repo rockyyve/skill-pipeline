@@ -43,7 +43,7 @@
 - 资源类型很多，不能只按“本地代码目录”处理。
 - 自动生成的 skill 往往过宽、过泛，触发不稳定。
 - 生成结果需要校验：命令、API、流程必须来自真实 source evidence，不能猜。
-- 不同电脑上的工具不一定完整安装。
+- 不同电脑上的工具不一定完整安装；缺少 `skill-seekers` 时应先尝试安装，而不是直接放弃自动分析。
 - skill 名称需要稳定、可安装、可发布。
 
 `source-skill-pipeline` 把这些问题拆成几个明确阶段：
@@ -51,30 +51,34 @@
 1. 发现当前环境可用工具。
 2. 识别 source 类型与访问需求。
 3. 给出 3 个推荐技能名，并允许用户自定义。
-4. 使用 `skill-seekers` 或 fallback 方式生成 draft skill。
-5. 使用 `skill-create` / `skill-creator` 或手工流程优化 draft。
-6. 校验 frontmatter、命名、证据引用和 eval prompts。
-7. 打包成 `.skill` 文件。
+4. 如果缺少 `skill-seekers`，先执行安装流程。
+5. 使用 `skill-seekers` 或 fallback 方式生成 draft skill。
+6. 使用 `skill-create` / `skill-creator` 或手工流程优化 draft。
+7. 校验 frontmatter、命名、证据引用和 eval prompts。
+8. 打包成 `.skill` 文件。
 
 ## 工作流总览
 
 ```mermaid
 flowchart TD
     A["User provides source or source set"] --> B["Discover tools"]
-    B --> C["Propose 3 skill names"]
-    C --> D["User picks or customizes name"]
-    D --> E{"skill-seekers available?"}
-    E -- Yes --> F["Generate draft from source"]
-    E -- No --> G["Manual source-appropriate inspection"]
-    F --> H["Normalize skill folder"]
-    G --> H
-    H --> I{"skill-create or skill-creator available?"}
-    I -- Yes --> J["Optimize and evaluate"]
-    I -- No --> K["Manual skill-creator-style optimization"]
-    J --> L["Validate"]
-    K --> L
-    L --> M["Package .skill"]
-    M --> N["Report output, fallbacks, and confidence checks"]
+    B --> C{"skill-seekers available?"}
+    C -- No --> D["Ask to install skill-seekers"]
+    D --> E{"Install succeeds?"}
+    C -- Yes --> F["Propose 3 skill names"]
+    E -- Yes --> F
+    E -- No --> G["Fallback to source-appropriate inspection"]
+    F --> H["User picks or customizes name"]
+    H --> I["Generate draft from source"]
+    G --> I
+    I --> J["Normalize skill folder"]
+    J --> K{"skill-create or skill-creator available?"}
+    K -- Yes --> L["Optimize and evaluate"]
+    K -- No --> M["Manual skill-creator-style optimization"]
+    L --> N["Validate"]
+    M --> N
+    N --> O["Package .skill"]
+    O --> P["Report output, fallbacks, and confidence checks"]
 ```
 
 ## 命名规则
@@ -110,18 +114,55 @@ flowchart TD
 
 ## 工具依赖策略
 
-`skill-seekers` 和 `skill-create` 都是加速器，不是硬依赖。
+`skill-seekers` 是首选分析器。缺少它时，流程会先尝试安装，再决定是否 fallback。
+
+`skill-create` 是优化加速器。缺少它时，不阻塞流程，可以使用 `skill-creator` 或手工优化。
 
 | 可用工具 | 分析阶段 | 优化阶段 |
 | --- | --- | --- |
 | `skill-seekers` + `skill-create` | 使用 `skill-seekers` 生成 draft | 使用 `skill-create` 优化 |
 | 只有 `skill-seekers` | 使用 `skill-seekers` 生成 draft | 使用 `skill-creator` 或手工优化 |
-| 只有 `skill-create` | 手工分析 source 生成 draft | 使用 `skill-create` 优化 |
-| 两者都没有 | 手工分析 source | 手工执行 skill-creator 风格优化 |
+| 只有 `skill-create` | 先安装 `skill-seekers`；失败后手工分析 source | 使用 `skill-create` 优化 |
+| 两者都没有 | 先安装 `skill-seekers`；失败后手工分析 source | 手工执行 skill-creator 风格优化 |
 
-如果缺少工具，但本地有明确安装方式，skill 会提示先征得用户同意再安装。
+如果缺少 `skill-seekers`，skill 会提示先征得用户同意再安装。
 
 如果安装方式不明确、需要网络、需要凭据，或者用户不想安装，流程不会中断，而是自动走 fallback。
+
+### skill-seekers 安装流程
+
+默认安装命令：
+
+```bash
+python3 -m pip install --user skill-seekers
+```
+
+如果你使用 `uv` 管理 CLI 工具，也可以选择：
+
+```bash
+uv tool install skill-seekers
+```
+
+如果 source 类型需要可选依赖，可以安装 extras：
+
+```bash
+python3 -m pip install --user 'skill-seekers[pptx]'
+python3 -m pip install --user 'skill-seekers[video]'
+python3 -m pip install --user 'skill-seekers[notion]'
+python3 -m pip install --user 'skill-seekers[confluence]'
+python3 -m pip install --user 'skill-seekers[rss]'
+python3 -m pip install --user 'skill-seekers[chat]'
+python3 -m pip install --user 'skill-seekers[all]'
+```
+
+安装后验证：
+
+```bash
+skill-seekers --version
+skill-seekers --help
+```
+
+如果安装成功但命令不可用，通常需要把 Python user base 的 `bin` 目录加入 `PATH`。
 
 ## 支持的 source 类型
 
@@ -242,7 +283,7 @@ source-skill-pipeline/
 
 ## Fallback 行为
 
-当 `skill-seekers` 不存在时，skill 会按 source 类型采用最接近的手工分析方式：
+当 `skill-seekers` 不存在时，skill 会先执行安装流程。只有安装被拒绝、失败或当前环境无法安装时，才会按 source 类型采用最接近的手工分析方式：
 
 - 代码仓库：读取 README、manifest、配置、入口、测试、文档。
 - 文档/幻灯片：提取标题、章节、术语、流程、例子。
@@ -355,7 +396,7 @@ zip -r dist/source-skill-pipeline.skill source-skill-pipeline \
 
 ### Tools are accelerators, not requirements
 
-`skill-seekers` 和 `skill-create` 可以提高效率，但缺少它们时不应该中断任务。fallback 是一等路径。
+`skill-seekers` 是首选分析器，缺少时应该先尝试安装。`skill-create` 可以提高优化效率，但缺少它时不应该中断任务。fallback 是一等路径。
 
 ### Naming should be stable
 
@@ -372,4 +413,3 @@ zip -r dist/source-skill-pipeline.skill source-skill-pipeline \
 ## License
 
 请根据你的开源仓库策略补充许可证，例如 MIT、Apache-2.0 或其他许可证。
-

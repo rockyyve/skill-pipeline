@@ -23,7 +23,7 @@ Before changing files, identify:
 - Existing tool paths or commands for `skill-seekers` and `skill-create`.
 - Where the final skill should be written.
 - Whether the user wants evaluation runs now or only a first packaged draft.
-- Whether the user is willing to install missing helper tools, if installation instructions are available.
+- Whether the user is willing to install `skill-seekers` if it is missing. Installing may require network access.
 
 If the user did not provide all inputs, make conservative assumptions:
 
@@ -106,14 +106,34 @@ find . -maxdepth 4 -iname '*skill*seek*' -o -iname '*skill*create*'
 
 If command discovery is noisy, run `scripts/discover_skill_tools.py` from this skill and read its summary.
 
-Treat `skill-seekers` and `skill-create` as optional accelerators, not hard dependencies:
+Treat `skill-seekers` as the preferred analyzer. If it is missing, run the installation flow before fallback. Treat `skill-create` as an optional optimizer accelerator:
 
 - **Both present**: run the full automated pipeline.
 - **Only `skill-seekers` present**: use it for draft generation, then optimize manually with the `skill-creator` workflow.
-- **Only `skill-create` present**: manually draft from source evidence, then pass that draft through `skill-create`.
-- **Neither present**: run the fully built-in fallback workflow using filesystem inspection, eval prompts, validation, and packaging.
+- **Only `skill-create` present**: install `skill-seekers` first; if installation fails or is declined, manually draft from source evidence, then pass that draft through `skill-create`.
+- **Neither present**: install `skill-seekers` first; if installation fails or is declined, run the fully built-in fallback workflow using source inspection, eval prompts, validation, and packaging.
 
-If a missing tool appears installable from local documentation or a known package manager, ask the user before installing it. Do not block the task while waiting for a perfect setup; if installation is declined, unavailable, or unclear, continue with the fallback path and report that choice.
+If `skill-seekers` is missing, follow this installation flow:
+
+1. Check Python tooling:
+   ```bash
+   python3 --version
+   python3 -m pip --version
+   command -v uv
+   ```
+2. Choose an install command:
+   - Default: `python3 -m pip install --user skill-seekers`
+   - If `uv` is available and preferred: `uv tool install skill-seekers`
+   - If the requested source needs optional support, choose the matching extra, such as `skill-seekers[pptx]`, `skill-seekers[video]`, `skill-seekers[notion]`, `skill-seekers[confluence]`, `skill-seekers[rss]`, `skill-seekers[chat]`, or `skill-seekers[all]`.
+3. Ask the user before running any install command because it may use the network and modify the Python environment.
+4. After installation, verify:
+   ```bash
+   skill-seekers --version
+   skill-seekers --help
+   ```
+5. If the command is installed outside `PATH`, locate the script and suggest adding its bin directory to `PATH`.
+
+If installation is declined, unavailable, blocked by permissions, or fails after a reasonable retry, continue with the fallback path and report that `skill-seekers` installation was attempted but not used.
 
 If `skill-seekers` is missing, use source-appropriate inspection as the analyzer fallback:
 
