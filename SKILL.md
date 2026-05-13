@@ -1,7 +1,6 @@
 ---
 name: source-skill-pipeline
 description: Build reliable source-specific Codex or Claude skills from any resource type supported by skill-seekers, including local codebases, GitHub repositories, documentation sites, PDFs, Word documents, EPUBs, videos, OpenAPI specs, PPTX decks, RSS feeds, Confluence, Notion, chat exports, and mixed source sets. Use this whenever the user wants to turn a repo, document, website, API spec, knowledge source, or collection of resources into a skill, improve an auto-generated skill, package source knowledge as a skill, or combine skill-seekers and skill-create into a dependable workflow.
-compatibility: Requires access to the target resource. Works with or without skill-seekers and skill-create: discover installed tools first, ask before installing missing tools, and fall back to source-appropriate inspection plus skill-creator-style drafting, evaluation, and packaging.
 ---
 
 # Source Skill Pipeline
